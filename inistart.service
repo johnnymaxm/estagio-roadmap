@@ -1,0 +1,14 @@
+[Unit]
+Description=Exibe mensagem de boas-vindas na inicialização do WSL2
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/inicia.sh
+StandardOutput=journal+console
+TTYPath=/dev/tty1
+RemainAfterExit=yes
+
+
+[Install]
+WantedBy=default.target
