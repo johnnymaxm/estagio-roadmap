@@ -1,0 +1,11 @@
+[Unit]
+Description=Exibe mensagem de boas-vindas na inicialização do WSL2
+After=network.target
+
+[Service]
+Type=simples
+ExecStart=/bin/bash /usr/local/bin/inicia.sh
+TimeoutStartSec=0
+
+[Install]
+WantedBy=default.target
