@@ -3,7 +3,8 @@ Description=Exibe mensagem de boas-vindas na inicialização do WSL2
 After=network.target
 
 [Service]
-Type=simples
+Type=oneshot
+RemainAfterExit=yes
 ExecStart=/bin/bash /usr/local/bin/inicia.sh
 TimeoutStartSec=0
 
