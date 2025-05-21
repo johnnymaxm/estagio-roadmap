@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  app:
+    build: . # Esse linha diz para contruir o docker a partir da imagem dockerfile da pasta  
+    container_name: node_app # Nome do containne
+    ports:
+      - "80:3000" # mapeia a porta do host para o container
+    depends_on: 
+      - mongo  # Essa linha garante que o conteiner (mongo) inicie antes do conteiner da aplicação
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/meubanco # Pega a variavel do codigo e faz ligação com o banco de dados
+    volumes:
+      - .:/app
+      - /app/node_modules 
+    networks:
+      - app-network # conecta a uma rede customizada
+
+  mongo:
+    image: mongo:latest # baixa e imagem
+    container_name: mongodb # Nome do container
+    ports: 
+      - "27017:27017" # Mapeia porta para esse container
+    volumes:
+      - mongo_data:/data/db # Armazena os dados 
+    networks:
+      - app-network # conecta a uma rede customizada
+
+  mongo-express:
+    image: mongo-express # baixa a imagem 
+    container_name: mongo_express # nome do container
+    restart: always # Faz o container reinicie automaticamente caso falhe
+    ports:
+      - "8081:8081" # Mapeia porta para esse container
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_MONGODB_PORT=27017 
+      - ME_CONFIG_BASICAUTH_USERNAME=admin # username para acessar o banco de dados
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin # password para acessar o banco de dados
+    depends_on:
+      - mongo
+    networks:
+      - app-network # conecta a uma rede customizada
+
+volumes:
+  mongo_data:
+
+networks:
+  app-network:
