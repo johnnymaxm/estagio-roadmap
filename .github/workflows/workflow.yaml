@@ -48,5 +48,5 @@ jobs:
 
       - name: Tag e Push da imagem
         run: |
-          docker tag MeuApache:${IMAGE_TAG} $ECR_URI:${IMAGE_TAG}
+          docker tag meuapache:${IMAGE_TAG} $ECR_URI:${IMAGE_TAG}
           docker push $ECR_URI:${IMAGE_TAG}
