@@ -6,7 +6,7 @@ terraform {
     }
   }
   backend "s3" {
-    bucket         = "state-estagio"
+    bucket         = "states-estagio"
     key            = "environments/dev/terraform.tfstate"
     region         = "us-east-1"
     encrypt = true

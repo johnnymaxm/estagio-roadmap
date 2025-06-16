@@ -1,0 +1,15 @@
+.terraform/
+
+terraform.tfstate
+terraform.tfstate.backup
+
+terraform.tfvars
+terraform-output.json
+
+*.tfbackend
+
+*_override.tf
+*_override.tf.json
+
+*.lock.hcl
+plan
