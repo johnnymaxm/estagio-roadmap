@@ -2,7 +2,7 @@ name: Build and Push Docker image to ECR
 
 on:
   push:
-    branches: [ master ]
+    branches: [ terraform ]
 
 env:
   AWS_REGION: us-east-1
