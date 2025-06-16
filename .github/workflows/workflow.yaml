@@ -46,7 +46,6 @@ jobs:
             | docker login --username AWS \
               --password-stdin $ECR_URI
 
-      - name: Tag e Push da imagem
+      - name: Push da imagem
         run: |
-          docker tag meuapache:${IMAGE_TAG} $ECR_URI:${IMAGE_TAG}
           docker push $ECR_URI:${IMAGE_TAG}
