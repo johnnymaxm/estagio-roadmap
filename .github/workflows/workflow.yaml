@@ -6,10 +6,10 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  AWS_ACCOUNT_ID: 637423276160
+  AWS_ACCOUNT_ID: 211125432164
   ECR_REPOSITORY: workflow
   IMAGE_TAG: build-${{ github.run_number }}
-  ECR_URI: 637423276160.dkr.ecr.us-east-1.amazonaws.com/workflow
+  ECR_URI: 211125432164.dkr.ecr.us-east-1.amazonaws.com/workflow
 
 jobs:
   build_and_push:
