@@ -8,6 +8,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+      - name: Test with Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: terraform-checkov
+          framework: terraform 
+          
         #1. Checkout do código
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -41,16 +53,3 @@ jobs:
         #10. Terraform Plan
       - name: Terraform Plan
         run: terraform plan
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.8
-      - name: Test with Checkov
-        id: checkov
-        uses: bridgecrewio/checkov-action@master
-        with:
-          directory: terraform-checkov
-          framework: terraform 
