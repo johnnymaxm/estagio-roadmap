@@ -4,3 +4,8 @@ output "policy_arns" {
   }
   description = "ARNs de políticas customizadas criadas no módulo"
 }
+
+output "custom_policy_arn" {
+  value = aws_iam_policy.this["Policy-customizada"].arn
+  description = "ARN da política customizada"
+}

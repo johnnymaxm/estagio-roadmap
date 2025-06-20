@@ -1,34 +1,12 @@
 locals {
   users = [
-    {
-      name              = "johnnymax"
-      force_destroy     = true
-      create_access_key = true
-      tags = {
-        Owner = "dev-team"
-      }
-    },
-    {
-      name              = "Victor-Teixeira"
-      force_destroy     = true
-      create_access_key = true
-      tags = {
-        Owner = "dev-team"
-      }
-    }
+     {
+       name = "Johnny Max"
+     }
   ]
 
-  groups = [
-    {
-      name        = "Desenvolvedor"
-      description = "Grupo de desenvolvedores"
-      users       = ["johnnymax", "Victor-Teixeira"]
-      policy_arns = [
-        "arn:aws:iam::aws:policy/AmazonEC2FullAccess",
-        module.iam.policy_arns["Policy-customizada"]
-      ]
-    }
-  ]
+
+  groups = []
 
   policies = [
     {

@@ -1,0 +1,99 @@
+name: Terraform CI/CD with Checkov and Manual Approval
+
+on:
+  push:
+    branches: [ checkov ]
+    paths:
+      - 'terraform-checkov/**'
+
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref_name == 'checkov' && 'test' }}
+
+    env:
+      TF_IN_AUTOMATION: true
+      AWS_REGION: us-east-1
+
+    steps:
+        #1. Checkout do código
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+       #2. Setup do Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+        #3. Autenticar na AWS via OIDC Role
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::675705320947:role/GitHubActions-TerraformRole
+          aws-region: ${{ env.AWS_REGION }}
+
+        #4. Terraform Format Check
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+        #5. Terraform Init
+      - name: Terraform Init
+        run: terraform init
+
+        #6. Terraform Validate
+      - name: Terraform Validate
+        run: terraform validate
+
+        #7. Instalar Checkov
+      - name: Install Checkov
+        run: pip install checkov
+
+        #8. Rodar Checkov + Exportar SARIF
+      - name: Run Checkov Scan
+        run: |
+          checkov -d . --output sarif > checkov-results.sarif
+
+        #9. Upload SARIF para GitHub Security Dashboard
+      - name: Upload Checkov SARIF results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: checkov-results.sarif
+
+        #10. Terraform Plan
+      - name: Terraform Plan
+        run: terraform plan
+
+ #   terraform-apply:
+ #     if: github.ref_name == 'main' || github.ref_name == 'develop'
+ #     needs: terraform
+ #     runs-on: ubuntu-latest
+
+ #       name: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+ #      url: https://example.com/terraform-dashboard  # Opcional: dashboard de deploy
+
+ #     env:
+ #       TF_IN_AUTOMATION: true
+ #       AWS_REGION: us-east-1
+
+ #     steps:
+ #       - name: Checkout repository
+ #         uses: actions/checkout@v4
+
+ #       - name: Setup Terraform
+ #         uses: hashicorp/setup-terraform@v3
+ #         with:
+ #           terraform_version: 1.6.0
+
+ #       - name: Configure AWS credentials (OIDC)
+ #         with:
+ #           role-to-assume: arn:aws:iam::675705320947:role/GitHubActions-TerraformRole
+ #           aws-region: ${{ env.AWS_REGION }}
+
+ #       - name: Terraform Init
+ #         run: terraform init
+
+ #       - name: Terraform Apply
+ #         run: terraform apply -auto-approve
