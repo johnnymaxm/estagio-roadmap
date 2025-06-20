@@ -3,8 +3,6 @@ name: Terraform CI/CD with Checkov and Manual Approval
 on:
   push:
     branches: [ checkov ]
-    paths:
-      - 'terraform-checkov/**'
 
 
 jobs:
