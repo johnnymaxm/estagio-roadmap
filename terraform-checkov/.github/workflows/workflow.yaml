@@ -26,13 +26,6 @@ jobs:
         with:
           terraform_version: 1.6.0
 
-        #3. Autenticar na AWS via OIDC Role
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::675705320947:role/GitHubActions-TerraformRole
-          aws-region: ${{ env.AWS_REGION }}
-
         #4. Terraform Format Check
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
