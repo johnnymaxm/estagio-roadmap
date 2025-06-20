@@ -4,33 +4,51 @@ on:
     branches:
       - checkov
 jobs:
-  terraform:
+  # Estágio 1: Análise de Segurança com Checkov
+  security-scan:
+    name: Security Scan with Checkov
     runs-on: ubuntu-latest
-
+    
     steps:
-      - uses: actions/checkout@v2
+      # 1. Checkout do código
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Set up Python para Checkov
       - name: Set up Python 3.8
         uses: actions/setup-python@v4
         with:
           python-version: 3.8
+
+      # 3. Executar Checkov
       - name: Test with Checkov
         id: checkov
         uses: bridgecrewio/checkov-action@master
         with:
           directory: terraform-checkov
-          framework: terraform 
-          
-        #1. Checkout do código
+          framework: terraform
+          # Opcional: adicionar mais configurações
+          # output_format: sarif
+          # soft_fail: true
+
+  # Estágio 2: Terraform Operations
+  terraform:
+    name: Terraform Plan and Apply
+    runs-on: ubuntu-latest
+    needs: security-scan  # Só executa se o scan de segurança passar
+    
+    steps:
+      # 1. Checkout do código
       - name: Checkout repository
         uses: actions/checkout@v4
 
-       #2. Setup do Terraform
+      # 2. Setup do Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
 
-        #3. Autenticar na AWS via OIDC Role
+      # 3. Autenticar na AWS
       - name: Configurar credenciais AWS
         uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -38,18 +56,18 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: "us-east-1"
 
-        #4. Terraform Format Check
+      # 4. Terraform Format Check
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
 
-        #5. Terraform Init
+      # 5. Terraform Init
       - name: Terraform Init
         run: terraform init
 
-        #6. Terraform Validate
+      # 6. Terraform Validate
       - name: Terraform Validate
         run: terraform validate
 
-        #10. Terraform Plan
+      # 7. Terraform Plan
       - name: Terraform Plan
         run: terraform plan
