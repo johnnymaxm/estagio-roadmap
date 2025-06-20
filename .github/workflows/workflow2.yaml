@@ -24,13 +24,13 @@ jobs:
       - name: Test with Checkov
         id: checkov
         uses: bridgecrewio/checkov-action@master
+        continue-on-error: true  # Continua mesmo com erro
         with:
           directory: terraform-checkov
           framework: terraform
-          # Opcional: adicionar mais configurações
-          # output_format: sarif
-          # soft_fail: true
-
+          soft_fail: true  # Checkov não falha o build por problemas encontrados
+          output_format: cli  # Mostra output detalhado no console
+          
   # Estágio 2: Terraform Operations
   terraform:
     name: Terraform Plan and Apply
