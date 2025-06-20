@@ -4,10 +4,46 @@ on:
     branches:
       - checkov
 jobs:
-  build:
-
+  terraform:
     runs-on: ubuntu-latest
+
     steps:
+      - uses: actions/checkout@v2
+      
+        #1. Checkout do código
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+       #2. Setup do Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+        #3. Autenticar na AWS via OIDC Role
+      - name: Configurar credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: "us-east-1"
+
+        #4. Terraform Format Check
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+        #5. Terraform Init
+      - name: Terraform Init
+        run: terraform init
+
+        #6. Terraform Validate
+      - name: Terraform Validate
+        run: terraform validate
+
+        #10. Terraform Plan
+      - name: Terraform Plan
+        run: terraform plan
+
       - uses: actions/checkout@v2
       - name: Set up Python 3.8
         uses: actions/setup-python@v4
