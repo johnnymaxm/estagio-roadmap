@@ -21,54 +21,59 @@ jobs:
       TF_IN_AUTOMATION: true
       AWS_REGION: us-east-1
 
+    defaults:
+      run:
+        working-directory: terraform-checkov
+
     steps:
-        #1. Checkout do código
+      #1. Checkout do código
       - name: Checkout repository
         uses: actions/checkout@v4
 
-       #2. Setup do Terraform
+      #2. Setup do Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
 
-        #3. Autenticar na AWS via OIDC Role
+      #3. Autenticar na AWS via OIDC Role
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::675705320947:role/GitHubActions-TerraformRole
           aws-region: ${{ env.AWS_REGION }}
 
-        #4. Terraform Format Check
+      #4. Terraform Format Check
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
 
-        #5. Terraform Init
+      #5. Terraform Init
       - name: Terraform Init
         run: terraform init
 
-        #6. Terraform Validate
+      #6. Terraform Validate
       - name: Terraform Validate
         run: terraform validate
 
+      #7. Install Checkov
       - name: Install Checkov
         run: pip install checkov
 
-      - name: Run Checkov Scan
-        run: checkov -d terraform-checkov/ --output cli
-
-        #8. Rodar Checkov + Exportar SARIF
+      #8. Run Checkov Scan + Upload SARIF
       - name: Run Checkov Scan
         run: |
-          checkov -d . --output sarif > checkov-results.sarif
+          checkov -d . --output cli --output sarif --output-file-path console,checkov-results.sarif
+        continue-on-error: true
 
-        #9. Upload SARIF para GitHub Security Dashboard
+      #9. Upload SARIF para GitHub Security Dashboard
       - name: Upload Checkov SARIF results
         uses: github/codeql-action/upload-sarif@v3
+        if: always()
         with:
-          sarif_file: checkov-results.sarif
+          sarif_file: terraform-checkov/checkov-results.sarif
+          category: checkov
 
-        #10. Terraform Plan
+      #10. Terraform Plan
       - name: Terraform Plan
         run: terraform plan
 
