@@ -64,6 +64,10 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
+      # 4. Terraform Format Check
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
       # 6. Terraform Validate
       - name: Terraform Validate
         run: terraform validate
@@ -71,10 +75,6 @@ jobs:
       # 7. Terraform Plan
       - name: Terraform Plan
         run: terraform plan
-
-      # 7. Terraform apply
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
 
   terraform_apply:
     name: Terraform Apply
