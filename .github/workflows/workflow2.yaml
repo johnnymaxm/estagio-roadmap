@@ -6,6 +6,11 @@ on:
     paths:
       - 'terraform-checkov/**'
 
+permissions:
+  security-events: write
+  actions: read
+  contents: read
+
 jobs:
   terraform:
     runs-on: ubuntu-latest
