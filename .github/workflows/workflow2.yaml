@@ -46,9 +46,11 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-        #7. Instalar Checkov
       - name: Install Checkov
         run: pip install checkov
+
+      - name: Run Checkov Scan
+        run: checkov -d terraform-checkov/ --output cli
 
         #8. Rodar Checkov + Exportar SARIF
       - name: Run Checkov Scan
