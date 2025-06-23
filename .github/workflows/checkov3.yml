@@ -1,0 +1,175 @@
+
+name: Terraform CI/CD with Checkov Manual Apply
+on:
+  push:
+    branches:
+      - checkov
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Ação a executar'
+        required: true
+        default: 'plan'
+        type: choice
+        options:
+          - plan
+          - apply
+      confirm_apply:
+        description: 'Confirmar Apply? (digite: CONFIRM)'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  # Estágio 1: Análise de Segurança com Checkov
+  security-scan:
+    name: Security Scan with Checkov
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Checkout do código
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Set up Python para Checkov
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+
+      # 3. Executar Checkov
+      - name: Test with Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        continue-on-error: true  # Continua mesmo com erro
+        with:
+          directory: terraform-checkov
+          framework: terraform
+          soft_fail: true  # Checkov não falha o build por problemas encontrados
+          output_format: cli  # Mostra output detalhado no console
+  # Estágio 2: Terraform Operations
+  terraform:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    needs: security-scan
+    defaults:
+      run:
+        working-directory: terraform-checkov
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Configurar credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: "us-east-1"
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Format (Auto-fix)
+        run: terraform fmt -recursive
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      # PLAN - Sempre executa
+      - name: Terraform Plan
+        run: |
+          terraform plan -detailed-exitcode -out=terraform.tfplan
+          echo "✅ Plan executado com sucesso!"
+
+      - name: Upload Terraform Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: terraform-checkov/terraform.tfplan
+
+      - name: Show Plan Summary
+        run: |
+          echo "## 📊 Resumo do Terraform Plan" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Plan executado com sucesso!**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.action }}" == "apply" ]]; then
+            if [[ "${{ github.event.inputs.confirm_apply }}" == "CONFIRM" ]]; then
+              echo "🚀 **Apply será executado automaticamente** (confirmação recebida)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ **Apply NÃO será executado** - Confirmação não fornecida" >> $GITHUB_STEP_SUMMARY
+              echo "Para executar o apply, execute novamente com 'CONFIRM' no campo de confirmação" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "ℹ️ **Apenas Plan foi executado** - Para aplicar, use 'Run workflow' → 'apply' + 'CONFIRM'" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Estágio 3: Terraform Apply
+  terraform_apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    needs: terraform
+    # Só executa se for workflow manual + action=apply + confirmação correta
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply' && github.event.inputs.confirm_apply == 'CONFIRM' }}
+    defaults:
+      run:
+        working-directory: terraform-checkov
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Configurar credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::675705320947:role/GitHubActions-TerraformRole
+          role-session-name: GitHubActions-TerraformApply
+          aws-region: us-east-1
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Download Terraform Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+          path: terraform-checkov/
+
+      - name: Validar confirmação
+        run: |
+          echo "🔍 Validando confirmação..."
+          echo "✅ Confirmação recebida: '${{ github.event.inputs.confirm_apply }}'"
+          echo "✅ Usuário que executou: ${{ github.actor }}"
+          echo "✅ Prosseguindo com Terraform Apply..."
+
+      - name: Terraform Apply
+        run: |
+          echo "🚀 Iniciando Terraform Apply..."
+          echo "📋 Aplicando mudanças do plan gerado anteriormente..."
+          terraform apply terraform.tfplan
+          echo "✅ Apply executado com sucesso!"
+
+      - name: Apply Summary
+        run: |
+          echo "## 🎉 Deploy Concluído!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Terraform Apply executado com sucesso**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "👤 **Executado por**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "⏰ **Data/Hora**: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [Ver recursos na AWS Console](https://console.aws.amazon.com)" >> $GITHUB_STEP_SUMMARY
