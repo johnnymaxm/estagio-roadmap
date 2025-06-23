@@ -5,6 +5,9 @@ on:
     branches:
       - checkov
 
+env:
+  MANUAL_APPLY: "true"
+
 permissions:
   issues: write
 
@@ -102,6 +105,7 @@ jobs:
   # Estágio 3: Manual Approval
   manual-approval:
     name: Manual Approval Before Apply
+    if: ${{ env.MANUAL_APPLY == 'true' }}
     runs-on: ubuntu-latest
     needs: terraform-plan
     steps:
