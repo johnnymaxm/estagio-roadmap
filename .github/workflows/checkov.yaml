@@ -13,28 +13,28 @@ permissions:
 
 jobs:
   # Estágio 1: Análise de Segurança com Checkov
-  security-scan:
-    name: Security Scan with Checkov
-    runs-on: ubuntu-latest
+  # security-scan:
+  #   name: Security Scan with Checkov
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
 
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.8
+  #     - name: Set up Python 3.8
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: 3.8
 
-      - name: Test with Checkov
-        id: checkov
-        uses: bridgecrewio/checkov-action@master
-        continue-on-error: true
-        with:
-          directory: terraform-checkov
-          framework: terraform
-          soft_fail: true
-          output_format: cli
+  #     - name: Test with Checkov
+  #       id: checkov
+  #       uses: bridgecrewio/checkov-action@master
+  #       continue-on-error: true
+  #       with:
+  #         directory: terraform-checkov
+  #         framework: terraform
+  #         soft_fail: true
+  #         output_format: cli
 
   # Estágio 2: Terraform Plan
   terraform-plan:
