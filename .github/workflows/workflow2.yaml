@@ -111,7 +111,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: terraform-plan
-          path: tfplan
+          path: terraform-checkov/tfplan  # CORREÇÃO: caminho completo
 
       - name: List files after artifact download (debug)
         run: ls -R tfplan
