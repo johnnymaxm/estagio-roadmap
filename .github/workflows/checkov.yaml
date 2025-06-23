@@ -5,6 +5,9 @@ on:
     branches:
       - checkov
 
+permissions:
+  issues: write
+
 jobs:
   # Estágio 1: Análise de Segurança com Checkov
   security-scan:
