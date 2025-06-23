@@ -2,9 +2,6 @@
 name: test
 
 on:
-  push:
-    branches:
-      - checkov
   workflow_dispatch:
 
 jobs:
