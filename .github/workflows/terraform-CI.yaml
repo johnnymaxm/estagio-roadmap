@@ -2,7 +2,7 @@ name: Terraform-CI
 on:
   push:
     branches:
-      - main
+      - checkov
   workflow_dispatch:  # Permite execução manual
     inputs:
       action:
