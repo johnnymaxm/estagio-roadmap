@@ -59,60 +59,10 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.0
-
-      - name: Configurar credenciais AWS
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: "us-east-1"
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Format (Auto-fix)
-        run: terraform fmt -recursive
-
-      - name: Terraform Format Check
-        if: ${{ !steps.skip-workflow.outputs.skip }}
-        run: terraform fmt -check -recursive
-
-      - name: Terraform Validate
-        if: ${{ !steps.skip-workflow.outputs.skip }}
-        run: terraform validate
-
-      - name: Terraform Plan
-        if: ${{ !steps.skip-workflow.outputs.skip }}
-        run: terraform plan
-
-  # Estágio 3: Manual Approval
-  manual-approval:
-    name: Manual Approval Before Apply
+  terraform:
+    name: Terraform Plan
     runs-on: ubuntu-latest
-    needs: terraform-plan
-    steps:
-      - uses: trstringer/manual-approval@v1
-        with:
-          secret: ${{ secrets.GITHUB_TOKEN }}
-          approvers: johnnymaxm
-          issue-title: "Aprovação Manual para Terraform Apply"
-          issue-body: "Por favor, revise o Terraform Plan e aprove para continuar com o Apply."
-          exclude-approver: false
-          minimum-approvals: 1
-
-  # Estágio 4: Terraform Apply
-  terraform-apply:
-    name: Terraform Apply
-    runs-on: ubuntu-latest
-    needs: manual-approval
+    needs: security-scan
     defaults:
       run:
         working-directory: terraform-checkov
@@ -136,5 +86,77 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Criar diretório para o plan
+        run: mkdir -p tfplan
+
+      - name: Terraform Plan (Salvar .tfplan)
+        run: terraform plan -out=tfplan/terraform.tfplan
+
+      - name: Upload Terraform Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: terraform-checkov/tfplan/terraform.tfplan
+
+  # Estágio 3: Manual Approval
+  manual-approval:
+    name: Manual Approval Before Apply
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    steps:
+      - uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: johnnymaxm
+          issue-title: "Aprovação Manual para Terraform Apply"
+          issue-body: "Por favor, revise o Terraform Plan e aprove para continuar com o Apply."
+          exclude-approver: false
+          minimum-approvals: 1
+
+  # Estágio 4: Terraform Apply
+  terraform_apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    needs: manual-approval
+    defaults:
+      run:
+        working-directory: terraform-checkov
+    environment:
+      name: test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Configurar credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: "us-east-1"
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Download Terraform Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+          path: tfplan
+
+      - name: List files after artifact download (debug)
+        run: ls -R tfplan
+
+      - name: Terraform Apply usando o plan salvo
+        run: terraform apply tfplan/terraform.tfplan
