@@ -100,7 +100,7 @@ jobs:
       - uses: trstringer/manual-approval@v1
         with:
           secret: ${{ secrets.GITHUB_TOKEN }}
-          approvers: johnnymaxm,victrteixeira
+          approvers: johnnymaxm
           issue-title: "Aprovação Manual para Terraform Apply"
           issue-body: "Por favor, revise o Terraform Plan e aprove para continuar com o Apply."
           exclude-approver: false
