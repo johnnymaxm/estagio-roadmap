@@ -1,5 +1,5 @@
 
-name: Checkov
+name: Terraform CI/CD with Checkov Manual Apply
 on:
   push:
     branches:
