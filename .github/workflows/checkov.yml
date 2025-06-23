@@ -3,6 +3,7 @@ name: "Checkov Terraform Security Scan"
 on:
   push:
     branches: [ "checkov" ]
+  workflow_dispatch:
 
 permissions:
   security-events: write
