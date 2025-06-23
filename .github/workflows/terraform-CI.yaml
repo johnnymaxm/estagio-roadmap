@@ -2,7 +2,7 @@ name: Terraform-CI
 on:
   push:
     branches:
-      - main
+      - checkov
 jobs:
   # Estágio 1: Análise de Segurança com Checkov
   security-scan:
@@ -86,7 +86,7 @@ jobs:
       run:
         working-directory: terraform-checkov
     environment:
-      name: DEV
+      name: test
 
     steps:
       - name: Checkout repository
