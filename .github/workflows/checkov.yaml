@@ -125,7 +125,7 @@ jobs:
     needs: 
       - terraform-plan
       - manual-approval
-    if: ${{ always() && needs.terraform-plan.result == 'success' && (env.MANUAL_APPLY == 'false' || (env.MANUAL_APPLY == 'true' && needs.manual-approval.result == 'success')) }}
+    if: ${{ always() && needs.terraform-plan.result == 'success' && (vars.MANUAL_APPLY == 'false' || (vars.MANUAL_APPLY == 'true' && needs.manual-approval.result == 'success')) }}
     defaults:
       run:
         working-directory: terraform-checkov
