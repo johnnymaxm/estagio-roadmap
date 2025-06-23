@@ -6,7 +6,7 @@ on:
       - checkov
 
 env:
-  MANUAL_APPLY: "true"
+  MANUAL_APPLY: "false"
 
 permissions:
   issues: write
