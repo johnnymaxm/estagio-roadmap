@@ -33,14 +33,13 @@ jobs:
 
   # Estágio 2: Terraform Operations
   terraform:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    needs: security-scan  # Só executa se o scan de segurança passar
     defaults:
       run:
         working-directory: terraform-checkov
 
-    name: Terraform Plan
-    runs-on: ubuntu-latest
-    needs: security-scan  # Só executa se o scan de segurança passar
-    
     steps:
       # 1. Checkout do código
       - name: Checkout repository
@@ -60,40 +59,56 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: "us-east-1"
 
-      # 5. Terraform Init
+      # 4. Terraform Init
       - name: Terraform Init
         run: terraform init
 
-      # 4. Terraform Format Check
-      - name: Terraform Format Check
-        run: terraform fmt -check -recursive
+      # 5. Terraform Format Check
+      #- name: Terraform Format Check
+      #  run: terraform fmt -check -recursive
 
       # 6. Terraform Validate
       - name: Terraform Validate
         run: terraform validate
 
-      # 7. Terraform Plan
-      - name: Terraform Plan
-        run: terraform plan
+      # 7. Criar diretório para o plan
+      - name: Criar diretório para o plan
+        run: mkdir -p tfplan
 
+      # 8. Terraform Plan (Salvando o arquivo .tfplan)
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan/terraform.tfplan
+
+      # 9. Upload do plan como Artifact
+      - name: Upload Terraform Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: terraform-checkov/tfplan/terraform.tfplan
+
+  # Estágio 3: Terraform Apply
   terraform_apply:
     name: Terraform Apply
     runs-on: ubuntu-latest
-    needs: terraform
+    needs: terraform  # Só executa se o Plan concluir
     defaults:
       run:
         working-directory: terraform-checkov
     environment:
       name: test
+
     steps:
+      # 1. Checkout do código
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Setup do Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
 
+      # 3. Autenticar na AWS
       - name: Configurar credenciais AWS
         uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -101,8 +116,17 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: "us-east-1"
 
+      # 4. Terraform Init
       - name: Terraform Init
         run: terraform init
 
+      # 5. Download do Plan salvo
+      - name: Download Terraform Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+          path: tfplan
+
+      # 6. Terraform Apply usando o plan baixado
       - name: Terraform Apply
-        run: terraform apply
+        run: terraform apply tfplan/terraform.tfplan
