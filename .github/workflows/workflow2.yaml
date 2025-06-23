@@ -115,7 +115,7 @@ jobs:
           name: terraform-plan
           path: tfplan
 
-      - name: List files after artifact download
+      - name: List files after artifact download (debug)
         run: ls -R tfplan
 
       - name: Terraform Apply usando o plan salvo
