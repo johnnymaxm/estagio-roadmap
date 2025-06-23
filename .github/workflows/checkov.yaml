@@ -43,6 +43,23 @@ jobs:
         working-directory: terraform-checkov
 
     steps:
+      - uses: actions/checkout@v2
+
+      - name: skip-workflow
+      
+        id: skip-workflow # id used for referencing step
+        
+        uses: saulmaldonado/skip-workflow@v1
+        with:
+          phrase: 'skip-workflow'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        if: ${{ !steps.skip-workflow.outputs.skip }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -68,6 +85,7 @@ jobs:
         run: terraform fmt -check -recursive
 
       - name: Terraform Validate
+        if: ${{ !steps.skip-workflow.outputs.skip }}
         run: terraform validate
 
       - name: Terraform Plan
