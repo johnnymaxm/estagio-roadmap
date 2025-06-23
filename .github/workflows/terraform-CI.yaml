@@ -3,21 +3,6 @@ on:
   push:
     branches:
       - checkov
-  workflow_dispatch:  # Permite execução manual
-    inputs:
-      action:
-        description: 'Ação a executar'
-        required: true
-        default: 'plan'
-        type: choice
-        options:
-        - plan
-        - apply
-      confirm_apply:
-        description: 'Confirmar Apply? (digite: CONFIRM)'
-        required: false
-        type: string
-        default: ''
 
 jobs:
   # Estágio 1: Análise de Segurança com Checkov
