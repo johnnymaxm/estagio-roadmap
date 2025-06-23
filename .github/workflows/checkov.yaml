@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - checkov
-  workflow_dispatch:  # ← Esta linha é CRUCIAL!
+  workflow_dispatch:
     inputs:
       action:
         description: 'Ação a executar'
@@ -12,13 +12,14 @@ on:
         default: 'plan'
         type: choice
         options:
-        - plan
-        - apply
+          - plan
+          - apply
       confirm_apply:
         description: 'Confirmar Apply? (digite: CONFIRM)'
         required: false
         type: string
         default: ''
+
 jobs:
   # Estágio 1: Análise de Segurança com Checkov
   security-scan:
