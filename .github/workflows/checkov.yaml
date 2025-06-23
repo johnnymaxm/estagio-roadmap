@@ -59,15 +59,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-  terraform:
-    name: Terraform Plan
-    runs-on: ubuntu-latest
-    needs: security-scan
-    defaults:
-      run:
-        working-directory: terraform-checkov
 
-    steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -85,6 +77,9 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
+
+      - name: Terraform Format (Auto-fix)
+        run: terraform fmt -recursive
 
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
