@@ -105,7 +105,7 @@ jobs:
   # Estágio 3: Manual Approval
   manual-approval:
     name: Manual Approval Before Apply
-    if: ${{ $MANUAL_APPLY == 'true' }}
+    if: env.MANUAL_APPLY == 'true'
     runs-on: ubuntu-latest
     needs: terraform-plan
     steps:
