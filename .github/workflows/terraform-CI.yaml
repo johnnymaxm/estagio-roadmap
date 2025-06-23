@@ -1,9 +1,9 @@
-name: Terraform-CI
+
+name: Checkov
 on:
   push:
     branches:
       - checkov
-
 jobs:
   # Estágio 1: Análise de Segurança com Checkov
   security-scan:
@@ -31,9 +31,7 @@ jobs:
           framework: terraform
           soft_fail: true  # Checkov não falha o build por problemas encontrados
           output_format: cli  # Mostra output detalhado no console
-
   # Estágio 2: Terraform Operations
-  terraform:
   terraform:
     name: Terraform Plan
     runs-on: ubuntu-latest
